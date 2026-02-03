@@ -124,3 +124,53 @@ main {
     background: #f8d7da;
     color: #721c24;
 }
+
+/* Expandable Sections */
+.steps-container,
+.ingredients-container {
+    display: none;
+    margin-top: 1rem;
+}
+
+.steps-container.visible,
+.ingredients-container.visible {
+    display: block;
+}
+
+/* Steps Styling */
+.steps {
+    list-style: decimal;
+    padding-left: 1.5rem;
+}
+
+.steps.level-1 {
+    list-style: circle;
+    margin-left: 1rem;
+}
+
+.steps.level-2 {
+    list-style: square;
+    margin-left: 1rem;
+}
+
+/* Toggle Buttons */
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.toggle-btn {
+    padding: 0.4rem 0.8rem;
+    border-radius: 16px;
+    border: 2px solid #764ba2;
+    background: white;
+    color: #764ba2;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.toggle-btn:hover {
+    background: #764ba2;
+    color: white;
+}
