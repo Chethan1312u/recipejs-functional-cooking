@@ -379,3 +379,4 @@ const RecipeApp = (() => {
 })();
 
 RecipeApp.init();
+
