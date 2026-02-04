@@ -1,9 +1,9 @@
 const RecipeApp = (() => {
-    console.log("RecipeApp initializing...");
+    console.log("🚀 RecipeApp initializing...");
 
-    // ============================================
-    // RECIPE DATA
-    // ============================================
+    /* =======================
+       RECIPE DATA
+    ======================= */
     const recipes = [
         {
             id: 1,
@@ -12,27 +12,8 @@ const RecipeApp = (() => {
             difficulty: "easy",
             description: "Creamy Italian pasta.",
             category: "pasta",
-            ingredients: [
-                "Spaghetti",
-                "Eggs",
-                "Parmesan cheese",
-                "Black pepper",
-                "Olive oil"
-            ],
-            steps: [
-                "Boil pasta in salted water",
-                {
-                    text: "Prepare sauce",
-                    substeps: [
-                        "Beat eggs",
-                        "Add grated cheese",
-                        "Mix with pepper"
-                    ]
-                },
-                "Drain pasta",
-                "Combine pasta and sauce",
-                "Serve hot"
-            ]
+            ingredients: ["Spaghetti", "Eggs", "Parmesan", "Pepper", "Olive oil"],
+            steps: ["Boil pasta", "Prepare sauce", "Mix and serve"]
         },
         {
             id: 2,
@@ -41,318 +22,191 @@ const RecipeApp = (() => {
             difficulty: "medium",
             description: "Spiced tomato curry.",
             category: "curry",
-            ingredients: [
-                "Chicken",
-                "Yogurt",
-                "Tomatoes",
-                "Spices",
-                "Cream"
-            ],
-            steps: [
-                "Marinate chicken",
-                {
-                    text: "Cook sauce",
-                    substeps: [
-                        "Heat oil",
-                        "Add spices",
-                        {
-                            text: "Prepare base",
-                            substeps: ["Add tomatoes", "Simmer well"]
-                        }
-                    ]
-                },
-                "Grill chicken",
-                "Combine chicken and sauce",
-                "Serve with rice"
-            ]
+            ingredients: ["Chicken", "Yogurt", "Tomatoes", "Spices"],
+            steps: ["Marinate", "Cook sauce", "Combine and serve"]
         },
         {
             id: 3,
-            title: "Homemade Croissants",
-            time: 180,
-            difficulty: "hard",
-            description: "Flaky French pastry.",
-            category: "baking",
-            ingredients: [
-                "Flour",
-                "Butter",
-                "Yeast",
-                "Milk",
-                "Sugar"
-            ],
-            steps: [
-                "Prepare dough",
-                "Layer butter",
-                "Fold and roll dough",
-                "Proof croissants",
-                "Bake until golden"
-            ]
-        },
-        {
-            id: 4,
             title: "Greek Salad",
             time: 15,
             difficulty: "easy",
             description: "Fresh veggie salad.",
             category: "salad",
-            ingredients: [
-                "Tomatoes",
-                "Cucumber",
-                "Olives",
-                "Feta cheese",
-                "Olive oil"
-            ],
-            steps: [
-                "Chop vegetables",
-                "Add olives and cheese",
-                "Drizzle olive oil",
-                "Mix gently",
-                "Serve fresh"
-            ]
-        },
-        {
-            id: 5,
-            title: "Beef Wellington",
-            time: 120,
-            difficulty: "hard",
-            description: "Beef wrapped in pastry.",
-            category: "meat",
-            ingredients: [
-                "Beef fillet",
-                "Mushrooms",
-                "Puff pastry",
-                "Mustard",
-                "Egg yolk"
-            ],
-            steps: [
-                "Sear beef",
-                "Prepare mushroom duxelles",
-                "Wrap beef",
-                "Cover with pastry",
-                "Bake until perfect"
-            ]
-        },
-        {
-            id: 6,
-            title: "Vegetable Stir Fry",
-            time: 20,
-            difficulty: "easy",
-            description: "Quick veggie stir fry.",
-            category: "vegetarian",
-            ingredients: [
-                "Mixed vegetables",
-                "Soy sauce",
-                "Garlic",
-                "Oil",
-                "Pepper"
-            ],
-            steps: [
-                "Heat pan",
-                "Add oil and garlic",
-                "Add vegetables",
-                "Stir fry quickly",
-                "Serve hot"
-            ]
-        },
-        {
-            id: 7,
-            title: "Pad Thai",
-            time: 30,
-            difficulty: "medium",
-            description: "Thai noodle dish.",
-            category: "noodles",
-            ingredients: [
-                "Rice noodles",
-                "Eggs",
-                "Peanuts",
-                "Sauce",
-                "Vegetables"
-            ],
-            steps: [
-                "Soak noodles",
-                "Cook eggs",
-                "Add noodles and sauce",
-                "Mix vegetables",
-                "Garnish and serve"
-            ]
-        },
-        {
-            id: 8,
-            title: "Margherita Pizza",
-            time: 60,
-            difficulty: "medium",
-            description: "Classic cheese pizza.",
-            category: "pizza",
-            ingredients: [
-                "Pizza dough",
-                "Tomato sauce",
-                "Mozzarella",
-                "Basil",
-                "Olive oil"
-            ],
-            steps: [
-                "Prepare dough",
-                "Spread sauce",
-                "Add cheese",
-                "Bake pizza",
-                "Garnish with basil"
-            ]
+            ingredients: ["Tomatoes", "Cucumber", "Feta", "Olives"],
+            steps: ["Chop veggies", "Mix", "Serve"]
         }
     ];
 
-    // ============================================
-    // STATE
-    // ============================================
+    /* =======================
+       STATE
+    ======================= */
     let currentFilter = "all";
     let currentSort = "none";
+    let searchQuery = "";
+    let debounceTimer;
 
-    // ============================================
-    // DOM REFERENCES
-    // ============================================
+    let favorites =
+        JSON.parse(localStorage.getItem("recipeFavorites")) || [];
+
+    /* =======================
+       DOM REFERENCES
+    ======================= */
     const recipeContainer = document.querySelector("#recipe-container");
     const filterButtons = document.querySelectorAll(".filter-btn");
     const sortButtons = document.querySelectorAll(".sort-btn");
+    const searchInput = document.querySelector("#search-input");
+    const clearSearchBtn = document.querySelector("#clear-search");
+    const recipeCounter = document.querySelector("#recipe-counter");
 
-    // ============================================
-    // FILTER & SORT (UNCHANGED)
-    // ============================================
-    const filterByDifficulty = (recipes, level) =>
-        recipes.filter(r => r.difficulty === level);
+    /* =======================
+       FILTERS
+    ======================= */
+    const filterBySearch = (list, query) => {
+        if (!query) return list;
 
-    const filterByTime = (recipes, maxTime) =>
-        recipes.filter(r => r.time < maxTime);
+        const lowerQuery = query.toLowerCase().trim();
 
-    const applyFilter = (recipes, filterType) => {
-        switch (filterType) {
-            case "easy":
-            case "medium":
-            case "hard":
-                return filterByDifficulty(recipes, filterType);
-            case "quick":
-                return filterByTime(recipes, 30);
-            default:
-                return recipes;
+        return list.filter(recipe => {
+            const titleMatch = recipe.title
+                .toLowerCase()
+                .includes(lowerQuery);
+
+            const ingredientMatch = recipe.ingredients.some(i =>
+                i.toLowerCase().includes(lowerQuery)
+            );
+
+            const descriptionMatch = recipe.description
+                .toLowerCase()
+                .includes(lowerQuery);
+
+            return titleMatch || ingredientMatch || descriptionMatch;
+        });
+    };
+
+    const filterFavorites = list =>
+        list.filter(r => favorites.includes(r.id));
+
+    const applyFilter = (list, type) => {
+        if (type === "favorites") return filterFavorites(list);
+        return list;
+    };
+
+    /* =======================
+       SORTING
+    ======================= */
+    const applySort = (list, type) => {
+        if (type === "name") {
+            return [...list].sort((a, b) =>
+                a.title.localeCompare(b.title)
+            );
         }
-    };
-
-    const sortByName = (recipes) =>
-        [...recipes].sort((a, b) => a.title.localeCompare(b.title));
-
-    const sortByTime = (recipes) =>
-        [...recipes].sort((a, b) => a.time - b.time);
-
-    const applySort = (recipes, sortType) => {
-        switch (sortType) {
-            case "name":
-                return sortByName(recipes);
-            case "time":
-                return sortByTime(recipes);
-            default:
-                return recipes;
+        if (type === "time") {
+            return [...list].sort((a, b) => a.time - b.time);
         }
+        return list;
     };
 
-    // ============================================
-    // RECURSION
-    // ============================================
-    const renderSteps = (steps, level = 0) => {
-        return `
-            <ul class="steps level-${level}">
-                ${steps.map(step => {
-                    if (typeof step === "string") {
-                        return `<li>${step}</li>`;
-                    }
-                    return `
-                        <li>
-                            ${step.text}
-                            ${renderSteps(step.substeps, level + 1)}
-                        </li>
-                    `;
-                }).join("")}
-            </ul>
-        `;
+    /* =======================
+       FAVORITES
+    ======================= */
+    const toggleFavorite = id => {
+        if (favorites.includes(id)) {
+            favorites = favorites.filter(fid => fid !== id);
+        } else {
+            favorites.push(id);
+        }
+
+        localStorage.setItem(
+            "recipeFavorites",
+            JSON.stringify(favorites)
+        );
+
+        updateDisplay();
     };
 
-    const createStepsHTML = (recipe) =>
-        `<div class="steps-container">${renderSteps(recipe.steps)}</div>`;
+    /* =======================
+       UI HELPERS
+    ======================= */
+    const updateCounter = (shown, total) => {
+        recipeCounter.textContent = `Showing ${shown} of ${total} recipes`;
+    };
 
-    const createIngredientsHTML = (recipe) => `
-        <div class="ingredients-container">
-            <ul>
-                ${recipe.ingredients.map(i => `<li>${i}</li>`).join("")}
-            </ul>
-        </div>
-    `;
-
-    // ============================================
-    // CARD TEMPLATE
-    // ============================================
-    const createRecipeCard = (recipe) => `
+    /* =======================
+       CARD TEMPLATE
+    ======================= */
+    const createRecipeCard = recipe => `
         <div class="recipe-card">
             <h3>${recipe.title}</h3>
+
             <div class="recipe-meta">
                 <span>⏱ ${recipe.time} min</span>
                 <span class="difficulty ${recipe.difficulty}">
                     ${recipe.difficulty}
                 </span>
+
+                <button
+                    class="favorite-btn ${
+                        favorites.includes(recipe.id) ? "active" : ""
+                    }"
+                    data-id="${recipe.id}"
+                >
+                    ❤️
+                </button>
             </div>
+
             <p>${recipe.description}</p>
-
-            <div class="card-actions">
-                <button class="toggle-btn" data-recipe-id="${recipe.id}" data-toggle="steps">
-                    Show Steps
-                </button>
-                <button class="toggle-btn" data-recipe-id="${recipe.id}" data-toggle="ingredients">
-                    Show Ingredients
-                </button>
-            </div>
-
-            ${createStepsHTML(recipe)}
-            ${createIngredientsHTML(recipe)}
         </div>
     `;
 
-    const renderRecipes = (list) => {
-        recipeContainer.innerHTML = list.map(createRecipeCard).join("");
+    const renderRecipes = list => {
+        recipeContainer.innerHTML = list
+            .map(createRecipeCard)
+            .join("");
     };
 
+    /* =======================
+       MAIN FLOW
+    ======================= */
     const updateDisplay = () => {
-        let result = applyFilter(recipes, currentFilter);
+        let result = filterBySearch(recipes, searchQuery);
+        result = applyFilter(result, currentFilter);
         result = applySort(result, currentSort);
+
+        updateCounter(result.length, recipes.length);
         renderRecipes(result);
     };
 
-    // ============================================
-    // EVENT DELEGATION
-    // ============================================
-    const handleToggleClick = (e) => {
-        if (!e.target.classList.contains("toggle-btn")) return;
+    /* =======================
+       EVENTS
+    ======================= */
+    const handleSearch = e => {
+        clearTimeout(debounceTimer);
 
-        const btn = e.target;
-        const card = btn.closest(".recipe-card");
-        const type = btn.dataset.toggle;
-        const container = card.querySelector(`.${type}-container`);
-
-        container.classList.toggle("visible");
-        btn.textContent = container.classList.contains("visible")
-            ? `Hide ${type.charAt(0).toUpperCase() + type.slice(1)}`
-            : `Show ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        debounceTimer = setTimeout(() => {
+            searchQuery = e.target.value;
+            clearSearchBtn.style.display = searchQuery
+                ? "inline"
+                : "none";
+            updateDisplay();
+        }, 300);
     };
 
-    const updateActiveButtons = () => {
-        filterButtons.forEach(btn =>
-            btn.classList.toggle("active", btn.dataset.filter === currentFilter)
-        );
-        sortButtons.forEach(btn =>
-            btn.classList.toggle("active", btn.dataset.sort === currentSort)
-        );
+    const clearSearch = () => {
+        searchInput.value = "";
+        searchQuery = "";
+        clearSearchBtn.style.display = "none";
+        updateDisplay();
+    };
+
+    const handleFavoriteClick = e => {
+        if (!e.target.classList.contains("favorite-btn")) return;
+        toggleFavorite(Number(e.target.dataset.id));
     };
 
     const setupEventListeners = () => {
         filterButtons.forEach(btn =>
             btn.addEventListener("click", e => {
                 currentFilter = e.target.dataset.filter;
-                updateActiveButtons();
                 updateDisplay();
             })
         );
@@ -360,24 +214,22 @@ const RecipeApp = (() => {
         sortButtons.forEach(btn =>
             btn.addEventListener("click", e => {
                 currentSort = e.target.dataset.sort;
-                updateActiveButtons();
                 updateDisplay();
             })
         );
 
-        recipeContainer.addEventListener("click", handleToggleClick);
-        console.log("Event listeners attached!");
+        searchInput.addEventListener("input", handleSearch);
+        clearSearchBtn.addEventListener("click", clearSearch);
+        recipeContainer.addEventListener("click", handleFavoriteClick);
     };
 
     const init = () => {
+        console.log("✅ RecipeApp ready");
         updateDisplay();
         setupEventListeners();
-        console.log("RecipeApp ready!");
     };
 
-    return { init, updateDisplay };
+    return { init };
 })();
 
 RecipeApp.init();
-
-
